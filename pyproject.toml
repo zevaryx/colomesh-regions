@@ -1,0 +1,13 @@
+[project]
+name = "iata-finder"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "airportsdata>=20260304",
+    "geopandas>=1.1.3",
+    "matplotlib>=3.10.8",
+    "scikit-learn>=1.8.0",
+    "shapely>=2.1.2",
+]
