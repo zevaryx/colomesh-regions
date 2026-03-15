@@ -12,7 +12,7 @@ state_geo = gpd.GeoDataFrame(state_geo, geometry=gpd.points_from_xy(state_geo.Lo
 # print(state_geo)
 
 airports = airportsdata.load('IATA')  # Keyed by IATA code
-target_airports = ["ALS", "ASE", "CEZ", "COS", "DEN", "DRO", "EGE", "FNL", "GJT", "GUC", "HDN", "MTJ", "PUB", "TEX"]
+target_airports = ["ALS", "ASE", "CEZ", "COS", "DEN", "DRO", "EGE", "FNL", "GJT", "GUC", "HDN", "LAA", "MTJ", "PUB", "STK", "TEX"]
 airport_coords = []
 
 idx = 0
@@ -65,9 +65,13 @@ for airport in target_airports:
         color = random.choice(colors)
 
     used.append(f"{style}:{color}")
+    series = gpd.GeoSeries([line])
     regions[airport]["series"] = gpd.GeoSeries([line])
     regions[airport]["color"] = color
     regions[airport]["style"] = style
+    data = series.to_json()
+    with open(f"json/{airport}.json", "w+") as f:
+        f.write(data)
 
 fig, ax = plt.subplots(figsize=(30, 30))
 state_geo.plot(ax=ax)
