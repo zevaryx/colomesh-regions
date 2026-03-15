@@ -6,6 +6,10 @@ import airportsdata
 from sklearn.neighbors import BallTree
 import random
 
+state_borders = gpd.read_file("USA_Boundaries_2023.geojson") # This is already in EPSG:3857
+colo_border = state_borders.loc[state_borders["STATE_NAME"] == "Colorado"]
+print(colo_border.geometry)
+
 state_geo = gpd.read_file("Colorado_City_Point_Locations.geojson").to_crs("EPSG:3857")
 state_geo = gpd.GeoDataFrame(state_geo, geometry=gpd.points_from_xy(state_geo.Longitude, state_geo.Latitude), crs="EPSG:3857")
 
@@ -37,7 +41,7 @@ _, state_geo['iata_index'] = tree.query(state_geo[['Latitude', 'Longitude']].val
 # state_geo['iata'] = airports_gdf.iloc[state_geo['iata_index']]['code']
 merged = state_geo.merge(airports_gdf, on="iata_index")
 
-print(merged[["name", "county", "code"]].head(50))
+# print(merged[["name", "county", "code"]].head(50))
 
 # Clean up columns
 merged[["name", "county", "code"]].to_csv("iata_lookups_by_city.csv")
@@ -70,11 +74,12 @@ for airport in target_airports:
     regions[airport]["color"] = color
     regions[airport]["style"] = style
     data = series.to_json()
-    with open(f"json/{airport}.json", "w+") as f:
+    with open(f"json/normal/{airport}.json", "w+") as f:
         f.write(data)
 
 fig, ax = plt.subplots(figsize=(30, 30))
 state_geo.plot(ax=ax)
+colo_border.plot(ax=ax, facecolor="none", edgecolor="black")
 #airports_gdf.plot(ax=ax, alpha=0.5, color="red", markersize=(10*1.609)*1000)
 
 for region in regions:

@@ -10,4 +10,5 @@ dependencies = [
     "matplotlib>=3.10.8",
     "scikit-learn>=1.8.0",
     "shapely>=2.1.2",
+    "tqdm>=4.67.3",
 ]
