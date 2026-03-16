@@ -116,6 +116,8 @@ for region in tqdm.tqdm(regions, unit="regions"):
     center = series.centroid
     ax.annotate(text=region, xy=(float(center.values.x[0]), float(center.values.y[0])), fontsize=100)
 
+ax.axis(False)
+
 print("> Saving figure...")
 plt.savefig(f"regions_{resolution}.png", dpi=200)
 # plt.show()
