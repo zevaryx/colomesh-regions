@@ -7,6 +7,9 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import Point
 
+def flushprint(text: str) -> None:
+    print(text, end="", flush=True)
+
 @dataclass
 class RegionData:
     series: gpd.GeoSeries
@@ -20,11 +23,12 @@ parser.add_argument("-z", "--zoom", action="store", type=int, default=10, help="
 args = parser.parse_args()
 
 print(f"> Generating region info using voronoi data")
-print("> Loading border information...")
+flushprint("> Loading border information... ")
 state_borders = gpd.read_file("USA_Boundaries_2023.geojson") # This is already in EPSG:4326
 colo_border = state_borders.loc[state_borders["STATE_NAME"] == "Colorado"]
+print("Done")
 
-print("> Loading airports...")
+flushprint("> Loading airports... ")
 airports = airportsdata.load('IATA')  # Keyed by IATA code
 target_airports = ["ALS", "ASE", "CEZ", "COS", "DEN", "DRO", "EGE", "FNL", "GJT", "GUC", "HDN", "LAA", "MTJ", "PUB", "STK", "TEX"]
 airport_coords = []
@@ -47,9 +51,9 @@ airports_gdf = gpd.GeoDataFrame(airport_coords, crs="EPSG:4326")
 data = airports_gdf.to_json()
 with open("json/airports.geojson", "w+") as f:
     f.write(data)
+print("Done")
 
-
-print("> Generating regions...")
+flushprint("> Generating regions... ")
 
 voronoi_polys = airports_gdf.voronoi_polygons(extend_to=colo_border.boundary) # type: ignore
 
@@ -62,17 +66,19 @@ for idx, row in merged.iterrows():
     single_poly = gpd.GeoDataFrame([row], crs=voronoi_gdf.crs)
     single_poly.to_file(filename, driver="GeoJSON")
 
+print("Done")
 if not args.geojson:
-    print("> Saving figure to regions.png...")
+    flushprint(f"> Saving figure to regions_z{args.zoom}.png... ")
     fig, ax = plt.subplots(figsize=(150, 150))
-    colo_border.plot(ax=ax, facecolor="none", edgecolor="black")
 
-    merged.plot(ax=ax, facecolor="none", edgecolor="red")
+    merged.plot(ax=ax, facecolor="none", edgecolor="red", linewidth=5)
     airports_gdf.plot(ax=ax, markersize=1000)
     
     for idx, row in airports_gdf.iterrows():
         ax.annotate(text=row["code"], xy=[row["lon"], row["lat"] + .05], horizontalalignment="center", fontsize=100)
 
     ax.axis(False)
-    cx.add_basemap(ax, crs=merged.crs, source=cx.providers.CartoDB.Voyager, zoom=args.zoom)
+    cx.add_basemap(ax, crs=merged.crs, source=cx.providers.OpenStreetMap.Mapnik, zoom=args.zoom)
     plt.savefig(f"regions_z{args.zoom}.png", bbox_inches='tight')
+    
+    print("Done")
