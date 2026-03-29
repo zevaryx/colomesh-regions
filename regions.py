@@ -62,6 +62,8 @@ voronoi_gdf = gpd.GeoDataFrame(geometry=voronoi_polys, crs="EPSG:4326").clip(col
 
 merged = gpd.sjoin(airports_gdf, voronoi_gdf, how="right", predicate="within")
 
+merged.to_file("json/merged.geojson")
+
 for idx, row in merged.iterrows():
     filename = f"json/{row['code']}.geojson"
     single_poly = gpd.GeoDataFrame([row], crs=voronoi_gdf.crs)
