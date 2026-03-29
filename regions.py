@@ -1,15 +1,11 @@
-import random
 from argparse import ArgumentParser
 from dataclasses import dataclass
 
 import airportsdata
+import contextily as cx
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
-import tqdm
-from matplotlib.lines import Line2D
 from shapely.geometry import Point
-from sklearn.neighbors import BallTree
 
 @dataclass
 class RegionData:
@@ -19,12 +15,13 @@ class RegionData:
 
 parser = ArgumentParser()
 parser.add_argument("-g", "--geojson", action="store_true", default=False, help="Only generate geojson files")
+parser.add_argument("-z", "--zoom", action="store", type=int, default=10, help="Zoom level to use for map tiles")
 
 args = parser.parse_args()
 
 print(f"> Generating region info using voronoi data")
 print("> Loading border information...")
-state_borders = gpd.read_file("USA_Boundaries_2023.geojson") # This is already in EPSG:3857
+state_borders = gpd.read_file("USA_Boundaries_2023.geojson") # This is already in EPSG:4326
 colo_border = state_borders.loc[state_borders["STATE_NAME"] == "Colorado"]
 
 print("> Loading airports...")
@@ -33,7 +30,7 @@ target_airports = ["ALS", "ASE", "CEZ", "COS", "DEN", "DRO", "EGE", "FNL", "GJT"
 airport_coords = []
 
 idx = 0
-for code in tqdm.tqdm(target_airports, unit="aps"):
+for code in target_airports:
     if code in airports:
         ap = airports[code]
         airport_coords.append({
@@ -45,7 +42,7 @@ for code in tqdm.tqdm(target_airports, unit="aps"):
         })
         idx += 1
 
-airports_gdf = gpd.GeoDataFrame(airport_coords, crs="EPSG:3857")
+airports_gdf = gpd.GeoDataFrame(airport_coords, crs="EPSG:4326")
 
 data = airports_gdf.to_json()
 with open("json/airports.geojson", "w+") as f:
@@ -56,7 +53,7 @@ print("> Generating regions...")
 
 voronoi_polys = airports_gdf.voronoi_polygons(extend_to=colo_border.boundary) # type: ignore
 
-voronoi_gdf = gpd.GeoDataFrame(geometry=voronoi_polys, crs="EPSG:3857").clip(colo_border)
+voronoi_gdf = gpd.GeoDataFrame(geometry=voronoi_polys, crs="EPSG:4326").clip(colo_border)
 
 merged = gpd.sjoin(airports_gdf, voronoi_gdf, how="right", predicate="within")
 
@@ -66,10 +63,16 @@ for idx, row in merged.iterrows():
     single_poly.to_file(filename, driver="GeoJSON")
 
 if not args.geojson:
-    fig, ax = plt.subplots(figsize=(15, 15))
-    colo_border.plot(ax=ax, facecolor=None, edgecolor="black", color=None)
+    print("> Saving figure to regions.png...")
+    fig, ax = plt.subplots(figsize=(150, 150))
+    colo_border.plot(ax=ax, facecolor="none", edgecolor="black")
 
-    merged.plot(ax=ax, facecolor=None, edgecolor="red", color=None)
+    merged.plot(ax=ax, facecolor="none", edgecolor="red")
+    airports_gdf.plot(ax=ax, markersize=1000)
+    
+    for idx, row in airports_gdf.iterrows():
+        ax.annotate(text=row["code"], xy=[row["lon"], row["lat"] + .05], horizontalalignment="center", fontsize=100)
 
     ax.axis(False)
-    plt.show()
+    cx.add_basemap(ax, crs=merged.crs, source=cx.providers.CartoDB.Voyager, zoom=args.zoom)
+    plt.savefig(f"regions_z{args.zoom}.png", bbox_inches='tight')
