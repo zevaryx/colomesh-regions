@@ -19,6 +19,7 @@ class RegionData:
 parser = ArgumentParser()
 parser.add_argument("-g", "--geojson", action="store_true", default=False, help="Only generate geojson files")
 parser.add_argument("-z", "--zoom", action="store", type=int, default=10, help="Zoom level to use for map tiles")
+parser.add_argument("-d", "--dpi", action="store", type=int, default=150, help="DPI to use for figure")
 
 args = parser.parse_args()
 
@@ -69,7 +70,7 @@ for idx, row in merged.iterrows():
 print("Done")
 if not args.geojson:
     flushprint(f"> Saving figure to regions_z{args.zoom}.png... ")
-    fig, ax = plt.subplots(figsize=(150, 150))
+    fig, ax = plt.subplots(figsize=(150, 150), dpi=150)
 
     merged.plot(ax=ax, facecolor="none", edgecolor="red", linewidth=5)
     airports_gdf.plot(ax=ax, markersize=1000)
