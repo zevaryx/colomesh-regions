@@ -217,5 +217,6 @@ __marimo__/
 
 # Custom
 *.csv
-json/**/*.json
+!State_Population_Data.csv
+json/*.geojson
 *.png
