@@ -85,7 +85,7 @@ def generate_regions():
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-g", "--geojson", action="store_true", default=False, help="Only generate geojson files")
+    parser.add_argument("-g", "--geojson", action="store_true", default=False, help="Only generate geojson files (no png of regions)")
     parser.add_argument("-z", "--zoom", action="store", type=int, default=10, help="Zoom level to use for map tiles")
     parser.add_argument("-d", "--dpi", action="store", type=int, default=100, help="DPI to use for figure")
 
