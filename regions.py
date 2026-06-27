@@ -14,7 +14,7 @@ def flushprint(text: str) -> None:
     print(text, end="", flush=True)
     
 def get_state() -> str:
-    title = "Please pick your state: "
+    title = "Please pick your state using Enter to submit: "
     options = STATES
     state, _ = pick(options, title)
     return str(state)
@@ -23,14 +23,16 @@ def get_iatas(state_border: gpd.GeoDataFrame) -> dict[str, airportsdata.Airport]
     airports = airportsdata.load("IATA")
     state_airports: dict[str, airportsdata.Airport] = {}
     for name, ap in airports.items():
+        name = f"{name} - {ap['name']}"
         p = Point(ap['lon'], ap['lat'])
         if state_border.geometry.contains(p).any():
             state_airports[name] = ap
             
     options = list(state_airports.keys())
-    title = "Please select all airports you want to use: "
-    airports = [x[0] for x in pick(options, title, multiselect=True)]
-    selected_airports = {k: v for k, v in state_airports.items() if k in airports}
+    title = "Please select all airports you want to use using Space to select and Enter to submit: "
+    selected = pick(options, title, multiselect=True)
+    airports = [x[0] for x in selected]
+    selected_airports = {k.split(" - ")[0]: v for k, v in state_airports.items() if k in airports}
     return selected_airports
     
 def generate_regions():
